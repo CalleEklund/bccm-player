@@ -91,7 +91,7 @@
         android:layoutDirection="ltr">
 
         <LinearLayout
-            android:id="@id/exo_time"
+            android:id="@+id/exo_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|start"
@@ -183,7 +183,7 @@
     </FrameLayout>
 
     <View
-        android:id="@id/exo_progress_placeholder"
+        android:id="@+id/exo_progress_placeholder"
         android:layout_width="match_parent"
         android:layout_height="@dimen/exo_styled_progress_layout_height"
         android:layout_gravity="bottom"
