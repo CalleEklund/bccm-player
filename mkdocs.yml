@@ -1,0 +1,21 @@
+# Setup
+# pip install mkdocs
+# pip install mkdocs-exclude
+# pip install pymdown-extensions
+#
+# Usage
+# Serve: mkdocs serve
+# Deploy: mkdocs gh-deploy
+
+site_name: BccmPlayer docs
+docs_dir: doc/
+theme:
+  name: readthedocs
+plugins:
+  - exclude:
+      glob:
+        - api/*
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
