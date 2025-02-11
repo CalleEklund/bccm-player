@@ -448,6 +448,10 @@ abstract class PlayerController : Player.Listener {
         plugin?.queueManagerPigeon?.skipToPrevious(this.id, NoOpVoidResult())
     }
 
+    fun sendCues(subtitleEvent: PlaybackPlatformApi.SubtitleEvent) {
+        plugin?.playbackPigeon?.onCues(subtitleEvent, NoOpVoidResult())
+    }
+
     override fun onPlaybackStateChanged(playbackState: Int) {
         if (playbackState == Player.STATE_ENDED) {
             plugin?.queueManagerPigeon?.handlePlaybackEnded(this.id, getCurrentMediaItem(), NoOpVoidResult());

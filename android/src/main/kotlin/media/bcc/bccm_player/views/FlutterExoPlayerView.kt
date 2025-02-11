@@ -106,13 +106,12 @@ class FlutterExoPlayerView(
             LayoutInflater.from(context).inflate(R.layout.surface_player_view, _v, true)
         } else {
             LayoutInflater.from(context).inflate(R.layout.player_view, _v, true)
-        }
+            // Initialize subtitle view after layout inflation
+            val subtitleView: SubtitleView? = _v.findViewById(R.id.custom_subtitle_view)
 
-        // Initialize subtitle view after layout inflation
-        val subtitleView: SubtitleView? = _v.findViewById(R.id.custom_subtitle_view)
-
-        if (subtitleView != null) {
-            Log.d("MySubtitles", "Subtitle view is set up properly.")
+            if (subtitleView != null) {
+                Log.d("MySubtitles", "Subtitle view is set up properly.")
+            }
         }
 
         playerController = playbackService.getController(playerId) as ExoPlayerController

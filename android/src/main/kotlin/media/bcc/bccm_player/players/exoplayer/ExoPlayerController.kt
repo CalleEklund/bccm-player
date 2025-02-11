@@ -13,6 +13,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackGroup
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.Cue
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -85,7 +86,6 @@ class ExoPlayerController(
 
 
     init {
-
         exoPlayer.addListener(object : Player.Listener {
            override fun onCues(cueGroup: CueGroup) {
                 Log.d("MySubtitles", "CueGroup: $cueGroup")
@@ -95,6 +95,27 @@ class ExoPlayerController(
                 cues.take(5).forEachIndexed { index, cue ->
                     Log.d("MySubtitles text", "Cue $index: ${cue.text}")
                 }
+
+
+               val cuesx = cueGroup.cues.mapNotNull { cue ->
+                   cue.text?.let {
+                       PlaybackPlatformApi.SubtitleCue.Builder()
+                           .setStartTimeMs(player.currentPosition.toLong())
+                           .setEndTimeMs(0)
+                           .setText(it.toString())
+                           .build()
+                   }
+
+               }
+
+               val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
+                   .setPlayerId(id)
+                   .setLanguage("en")  // Update if you have the language dynamically
+                   .setCues(cuesx)
+                   .build()
+
+               sendCues(subtitleEvent)
+
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {

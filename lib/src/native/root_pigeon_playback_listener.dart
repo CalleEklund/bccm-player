@@ -74,4 +74,12 @@ class RootPigeonPlaybackListener implements PlaybackListenerPigeon {
       listener.onPrimaryPlayerChanged(playerId);
     }
   }
+
+  @override
+  void onCues(SubtitleEvent event) {
+    _streamController.add(event);
+    for (var listener in _listeners) {
+      listener.onCues(event);
+    }
+  }
 }

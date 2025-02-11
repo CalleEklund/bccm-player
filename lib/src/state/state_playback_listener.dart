@@ -45,4 +45,9 @@ class StatePlaybackListener implements PlaybackListenerPigeon {
   void onPrimaryPlayerChanged(event) {
     pluginStateNotifier.setPrimaryPlayer(event.playerId);
   }
+
+  @override
+  void onCues(SubtitleEvent event) {
+    pluginStateNotifier.getOrAddPlayerNotifier(event.playerId).setCues(event.cues);
+  }
 }

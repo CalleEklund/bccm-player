@@ -286,6 +286,21 @@ abstract class PlaybackListenerPigeon {
   void onMediaItemTransition(MediaItemTransitionEvent event);
   @ObjCSelector("onPictureInPictureModeChanged:")
   void onPictureInPictureModeChanged(PictureInPictureModeChangedEvent event);
+  @ObjCSelector("onCues:")
+  void onCues(SubtitleEvent event);
+}
+
+class SubtitleCue {
+  late int startTimeMs;
+  late int endTimeMs;
+  late String text;
+}
+
+class SubtitleEvent implements PlayerEvent{
+  @override
+  late String playerId;
+  late String language;
+  late List<SubtitleCue?> cues;
 }
 
 class PrimaryPlayerChangedEvent {

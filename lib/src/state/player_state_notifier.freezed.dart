@@ -28,6 +28,7 @@ mixin _$PlayerState {
   bool get isInitialized => throw _privateConstructorUsedError;
   int? get textureId => throw _privateConstructorUsedError;
   double? get volume => throw _privateConstructorUsedError;
+  List<SubtitleCue?> get cues => throw _privateConstructorUsedError;
   PlayerError? get error => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -54,6 +55,7 @@ abstract class $PlayerStateCopyWith<$Res> {
       bool isInitialized,
       int? textureId,
       double? volume,
+      List<SubtitleCue?> cues,
       PlayerError? error});
 }
 
@@ -82,6 +84,7 @@ class _$PlayerStateCopyWithImpl<$Res, $Val extends PlayerState>
     Object? isInitialized = null,
     Object? textureId = freezed,
     Object? volume = freezed,
+    Object? cues = null,
     Object? error = freezed,
   }) {
     return _then(_value.copyWith(
@@ -133,6 +136,10 @@ class _$PlayerStateCopyWithImpl<$Res, $Val extends PlayerState>
           ? _value.volume
           : volume // ignore: cast_nullable_to_non_nullable
               as double?,
+      cues: null == cues
+          ? _value.cues
+          : cues // ignore: cast_nullable_to_non_nullable
+              as List<SubtitleCue?>,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -162,6 +169,7 @@ abstract class _$$PlayerStateImplCopyWith<$Res>
       bool isInitialized,
       int? textureId,
       double? volume,
+      List<SubtitleCue?> cues,
       PlayerError? error});
 }
 
@@ -188,6 +196,7 @@ class __$$PlayerStateImplCopyWithImpl<$Res>
     Object? isInitialized = null,
     Object? textureId = freezed,
     Object? volume = freezed,
+    Object? cues = null,
     Object? error = freezed,
   }) {
     return _then(_$PlayerStateImpl(
@@ -239,6 +248,10 @@ class __$$PlayerStateImplCopyWithImpl<$Res>
           ? _value.volume
           : volume // ignore: cast_nullable_to_non_nullable
               as double?,
+      cues: null == cues
+          ? _value.cues
+          : cues // ignore: cast_nullable_to_non_nullable
+              as List<SubtitleCue?>,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -263,6 +276,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       this.isInitialized = false,
       this.textureId,
       this.volume,
+      this.cues = const [],
       this.error})
       : super._();
 
@@ -297,11 +311,13 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
   @override
   final double? volume;
   @override
+  final List<SubtitleCue?> cues;
+  @override
   final PlayerError? error;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'PlayerState(playerId: $playerId, currentMediaItem: $currentMediaItem, videoSize: $videoSize, playbackPositionMs: $playbackPositionMs, playbackSpeed: $playbackSpeed, isNativeFullscreen: $isNativeFullscreen, playbackState: $playbackState, isBuffering: $isBuffering, isInPipMode: $isInPipMode, isInitialized: $isInitialized, textureId: $textureId, volume: $volume, error: $error)';
+    return 'PlayerState(playerId: $playerId, currentMediaItem: $currentMediaItem, videoSize: $videoSize, playbackPositionMs: $playbackPositionMs, playbackSpeed: $playbackSpeed, isNativeFullscreen: $isNativeFullscreen, playbackState: $playbackState, isBuffering: $isBuffering, isInPipMode: $isInPipMode, isInitialized: $isInitialized, textureId: $textureId, volume: $volume, cues: $cues, error: $error)';
   }
 
   @override
@@ -321,6 +337,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       ..add(DiagnosticsProperty('isInitialized', isInitialized))
       ..add(DiagnosticsProperty('textureId', textureId))
       ..add(DiagnosticsProperty('volume', volume))
+      ..add(DiagnosticsProperty('cues', cues))
       ..add(DiagnosticsProperty('error', error));
   }
 
@@ -352,6 +369,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
             (identical(other.textureId, textureId) ||
                 other.textureId == textureId) &&
             (identical(other.volume, volume) || other.volume == volume) &&
+            const DeepCollectionEquality().equals(other.cues, cues) &&
             (identical(other.error, error) || other.error == error));
   }
 
@@ -370,6 +388,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       isInitialized,
       textureId,
       volume,
+      cues,
       error);
 
   @JsonKey(ignore: true)
@@ -393,6 +412,7 @@ abstract class _PlayerState extends PlayerState {
       final bool isInitialized,
       final int? textureId,
       final double? volume,
+      final List<SubtitleCue?> cues,
       final PlayerError? error}) = _$PlayerStateImpl;
   const _PlayerState._() : super._();
 
@@ -420,6 +440,8 @@ abstract class _PlayerState extends PlayerState {
   int? get textureId;
   @override
   double? get volume;
+  @override
+  List<SubtitleCue?> get cues;
   @override
   PlayerError? get error;
   @override
