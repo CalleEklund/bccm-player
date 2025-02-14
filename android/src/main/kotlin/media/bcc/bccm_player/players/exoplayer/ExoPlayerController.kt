@@ -59,23 +59,18 @@ class ExoPlayerController(
     override val id: String = UUID.randomUUID().toString()
     private val trackSelector: DefaultTrackSelector = DefaultTrackSelector(context)
 
-    // --- New: Build a data source factory for caching ---
     private val cacheDataSourceFactory = CacheDataSource.Factory()
         .setCache(Downloader.getCache(context))
         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
         .setCacheWriteDataSinkFactory(null)
 
-    // --- New: Create an HLS factory with chunkless preparation disabled ---
     private val hlsFactory = HlsMediaSource.Factory(cacheDataSourceFactory)
         .setAllowChunklessPreparation(false)
 
-
-    // --- New: Create a media source factory that uses the custom HLS factory for HLS URIs,
-    // and otherwise falls back to the standard DefaultMediaSourceFactory.
     /*private val mediaSourceFactory = DefaultMediaSourceFactory(context, hlsFactory)
         .setDataSourceFactory(cacheDataSourceFactory)*/
+    var currentSelectedLanguage: String = ""
 
-    // --- Rebuild ExoPlayer using the custom media source factory ---
     private val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
         .setAudioAttributes(AudioAttributes.DEFAULT, true)
@@ -88,16 +83,9 @@ class ExoPlayerController(
     init {
         exoPlayer.addListener(object : Player.Listener {
            override fun onCues(cueGroup: CueGroup) {
-                Log.d("MySubtitles", "CueGroup: $cueGroup")
-                val cues = cueGroup.cues
-                Log.d("MySubtitles", "Got ${cues.size} cues from ExoPlayer")
-                // Log some of the cues to see their content
-                cues.take(5).forEachIndexed { index, cue ->
-                    Log.d("MySubtitles text", "Cue $index: ${cue.text}")
-                }
 
-
-               val cuesx = cueGroup.cues.mapNotNull { cue ->
+               val cues = cueGroup.cues
+               val subTitleCues = cues.mapNotNull { cue ->
                    cue.text?.let {
                        PlaybackPlatformApi.SubtitleCue.Builder()
                            .setStartTimeMs(player.currentPosition.toLong())
@@ -105,13 +93,12 @@ class ExoPlayerController(
                            .setText(it.toString())
                            .build()
                    }
-
                }
 
                val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
                    .setPlayerId(id)
-                   .setLanguage("en")  // Update if you have the language dynamically
-                   .setCues(cuesx)
+                   .setLanguage(currentSelectedLanguage)
+                   .setCues(subTitleCues)
                    .build()
 
                sendCues(subtitleEvent)
@@ -163,7 +150,6 @@ class ExoPlayerController(
 
         trackSelector.setParameters(
             trackSelector.buildUponParameters()
-                .setPreferredTextLanguage("en")
                 .build()
         )
 
@@ -364,6 +350,9 @@ class ExoPlayerController(
                     Log.d("MySubs", "Text track group found: ${group.mediaTrackGroup}, isSelected=${group.isSelected}")
                     for (i in 0 until group.length) {
                         val format = group.mediaTrackGroup.getFormat(i)
+                        if(group.isSelected){
+                            currentSelectedLanguage = format.language.toString()
+                        }
                         Log.d("MySubs", "Track $i => lang=${format.language}, mime=${format.sampleMimeType}")
                     }
                 }
@@ -376,7 +365,7 @@ class ExoPlayerController(
             }
         }
         if (textLanguages?.isEmpty() == true) {
-            //setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+            setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
             textLanguagesThatShouldBeSelected = null
         }
         updateYouboraOptions()

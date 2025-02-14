@@ -25,7 +25,7 @@ object MediaInfoFetcher {
             trackSelector.buildUponParameters().setMaxVideoBitrate(1).setMaxAudioBitrate(1)
                 .setTrackTypeDisabled(TRACK_TYPE_AUDIO, true)
                 .setTrackTypeDisabled(TRACK_TYPE_VIDEO, true)
-                .setTrackTypeDisabled(TRACK_TYPE_TEXT, false)
+                .setTrackTypeDisabled(TRACK_TYPE_TEXT, true)
         )
         val player = ExoPlayer.Builder(context)
             .setTrackSelector(trackSelector).build()
