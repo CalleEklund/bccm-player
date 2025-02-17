@@ -64,44 +64,41 @@ class ExoPlayerController(
         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
         .setCacheWriteDataSinkFactory(null)
 
-    private val hlsFactory = HlsMediaSource.Factory(cacheDataSourceFactory)
-        .setAllowChunklessPreparation(false)
+    private val mediaSourceFactory = DefaultMediaSourceFactory(cacheDataSourceFactory)
 
-    /*private val mediaSourceFactory = DefaultMediaSourceFactory(context, hlsFactory)
-        .setDataSourceFactory(cacheDataSourceFactory)*/
     var currentSelectedLanguage: String = ""
 
     private val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
         .setAudioAttributes(AudioAttributes.DEFAULT, true)
         .setVideoScalingMode(VIDEO_SCALING_MODE_SCALE_TO_FIT)
-        .setMediaSourceFactory(hlsFactory)
+        .setMediaSourceFactory(mediaSourceFactory)
         .setLoadControl(getLoadControlForBufferMode(bufferMode))
         .build()
 
 
     init {
         exoPlayer.addListener(object : Player.Listener {
-           override fun onCues(cueGroup: CueGroup) {
+            override fun onCues(cueGroup: CueGroup) {
 
-               val cues = cueGroup.cues
-               val subTitleCues = cues.mapNotNull { cue ->
-                   cue.text?.let {
-                       PlaybackPlatformApi.SubtitleCue.Builder()
-                           .setStartTimeMs(player.currentPosition.toLong())
-                           .setEndTimeMs(0)
-                           .setText(it.toString())
-                           .build()
-                   }
-               }
+                val cues = cueGroup.cues
+                val subTitleCues = cues.mapNotNull { cue ->
+                    cue.text?.let {
+                        PlaybackPlatformApi.SubtitleCue.Builder()
+                            .setStartTimeMs(player.currentPosition.toLong())
+                            .setEndTimeMs(0)
+                            .setText(it.toString())
+                            .build()
+                    }
+                }
 
-               val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
-                   .setPlayerId(id)
-                   .setLanguage(currentSelectedLanguage)
-                   .setCues(subTitleCues)
-                   .build()
+                val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
+                    .setPlayerId(id)
+                    .setLanguage(currentSelectedLanguage)
+                    .setCues(subTitleCues)
+                    .build()
 
-               sendCues(subtitleEvent)
+                sendCues(subtitleEvent)
 
             }
 
@@ -345,17 +342,17 @@ class ExoPlayerController(
     override fun onTracksChanged(tracks: Tracks) {
         super.onTracksChanged(tracks)
         // Log all text tracks discovered by ExoPlayer
-            for (group in tracks.groups) {
-                if (group.type == C.TRACK_TYPE_TEXT) {
-                    Log.d("MySubs", "Text track group found: ${group.mediaTrackGroup}, isSelected=${group.isSelected}")
-                    for (i in 0 until group.length) {
-                        val format = group.mediaTrackGroup.getFormat(i)
-                        if(group.isSelected){
-                            currentSelectedLanguage = format.language.toString()
-                        }
-                        Log.d("MySubs", "Track $i => lang=${format.language}, mime=${format.sampleMimeType}")
+        for (group in tracks.groups) {
+            if (group.type == C.TRACK_TYPE_TEXT) {
+                Log.d("MySubs", "Text track group found: ${group.mediaTrackGroup}, isSelected=${group.isSelected}")
+                for (i in 0 until group.length) {
+                    val format = group.mediaTrackGroup.getFormat(i)
+                    if(group.isSelected){
+                        currentSelectedLanguage = format.language.toString()
                     }
+                    Log.d("MySubs", "Track $i => lang=${format.language}, mime=${format.sampleMimeType}")
                 }
+            }
         }
         Log.d("ExoPlayerController", "textLanguagesThatShouldBeSelected => ${textLanguagesThatShouldBeSelected?.joinToString()}")
         val textLanguages = textLanguagesThatShouldBeSelected
