@@ -28,7 +28,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
     var repeatMode = RepeatMode.off
     let bufferMode: BufferMode
     let disableNpaw: Bool
-
+    public var manuallySelectedAudioLanguage: String?
+    public var manuallySelectedSubtitleLanguage: String?
+    
     var audioOnlyTimer: Timer?
     var currentViewController: AVPlayerViewController? {
         didSet {
@@ -36,9 +38,7 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         }
     }
     
-    public var manuallySelectedAudioLanguage: String?
-    
-    private func updateAutomaticAudioOnlyTimer() {
+    public func updateAutomaticAudioOnlyTimer() {
         if bufferMode == BufferMode.fastStartShortForm {
             // no-op, we dont want automatic audio-only for shortform content
             return
@@ -200,6 +200,11 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         }
         guard let trackId = trackId else {
             currentItem.select(nil, in: selectionGroup)
+            if mediaCharacteristic == .legible {
+                manuallySelectedSubtitleLanguage = "none"
+            } else if mediaCharacteristic == .audible {
+                manuallySelectedAudioLanguage = "none"
+            }
             return
         }
         guard let trackIdInt = Int(trackId) else {
@@ -218,6 +223,8 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                 currentItem.select(optionToSelect, in: selectionGroup)
                 if type == .audio {
                     manuallySelectedAudioLanguage = optionToSelect.locale?.identifier
+                } else if type == .text {
+                    manuallySelectedSubtitleLanguage = optionToSelect.locale?.identifier
                 }
             }
         } else {
@@ -328,9 +335,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         coordinator.animate(alongsideTransition: { _ in }, completion: {
             _ in
             UIView.setAnimationsEnabled(true)
+            self.fullscreenViewController = playerViewController
+            self.onManualPlayerStateUpdate()
         })
-        fullscreenViewController = playerViewController
-        onManualPlayerStateUpdate()
     }
     
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
@@ -527,7 +534,21 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                         if !audioLanguages.isEmpty {
                             _ = playerItem.setAudioLanguagePrioritized(audioLanguages)
                         }
-                        if let subtitleLanguages = self.appConfig?.subtitleLanguages {
+                        var subtitleLanguages: [String] = []
+                        if let manuallySelectedSubtitleLanguage = self.manuallySelectedSubtitleLanguage {
+                            if manuallySelectedSubtitleLanguage == "none" {
+                                // If user explicitly selected 'none', disable subtitles
+                                if let subtitleGroup = playerItem.asset.mediaSelectionGroup(forMediaCharacteristic: .legible) {
+                                    playerItem.select(nil, in: subtitleGroup)
+                                }
+                            } else {
+                                subtitleLanguages.append(manuallySelectedSubtitleLanguage)
+                            }
+                        }
+                        if let configSubtitleLanguages = self.appConfig?.subtitleLanguages {
+                            subtitleLanguages.append(contentsOf: configSubtitleLanguages)
+                        }
+                        if !subtitleLanguages.isEmpty && self.manuallySelectedSubtitleLanguage != "none" {
                             _ = playerItem.setSubtitleLanguagePrioritized(subtitleLanguages)
                         }
                         
