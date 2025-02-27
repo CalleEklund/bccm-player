@@ -6,6 +6,11 @@ import MediaPlayer
 import YouboraAVPlayerAdapter
 import YouboraLib
 
+fileprivate enum UserDefaultsKeys {
+    static let audioLanguagePreference = "com.bccm.player.audioLanguagePreference"
+    static let subtitleLanguagePreference = "com.bccm.player.subtitleLanguagePreference"
+}
+
 public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewControllerDelegate {
     lazy var player: AVQueuePlayer = .init()
     public final let id: String
@@ -28,8 +33,24 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
     var repeatMode = RepeatMode.off
     let bufferMode: BufferMode
     let disableNpaw: Bool
-    public var manuallySelectedAudioLanguage: String?
-    public var manuallySelectedSubtitleLanguage: String?
+    public var manuallySelectedAudioLanguage: String? {
+        didSet {
+            if let language = manuallySelectedAudioLanguage {
+                UserDefaults.standard.set(language, forKey: UserDefaultsKeys.audioLanguagePreference)
+            } else {
+                UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.audioLanguagePreference)
+            }
+        }
+    }
+    public var manuallySelectedSubtitleLanguage: String? {
+        didSet {
+            if let language = manuallySelectedSubtitleLanguage {
+                UserDefaults.standard.set(language, forKey: UserDefaultsKeys.subtitleLanguagePreference)
+            } else {
+                UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.subtitleLanguagePreference)
+            }
+        }
+    }
     
     var audioOnlyTimer: Timer?
     var currentViewController: AVPlayerViewController? {
@@ -76,6 +97,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
             initYoubora(npawConfig)
         }
         print("BTV DEBUG: end of init playerController")
+        
+        manuallySelectedAudioLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.audioLanguagePreference)
+        manuallySelectedSubtitleLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.subtitleLanguagePreference)
     }
     
     deinit {
@@ -525,6 +549,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                             self.play()
                         }
                         var audioLanguages: [String] = []
+                        if self.manuallySelectedAudioLanguage == nil {
+                            self.manuallySelectedAudioLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.audioLanguagePreference)
+                        }
                         if let manuallySelectedAudioLanguage = self.manuallySelectedAudioLanguage {
                             audioLanguages.append(manuallySelectedAudioLanguage)
                         }
@@ -534,7 +561,11 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                         if !audioLanguages.isEmpty {
                             _ = playerItem.setAudioLanguagePrioritized(audioLanguages)
                         }
+                        
                         var subtitleLanguages: [String] = []
+                        if self.manuallySelectedSubtitleLanguage == nil {
+                            self.manuallySelectedSubtitleLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.subtitleLanguagePreference)
+                        }
                         if let manuallySelectedSubtitleLanguage = self.manuallySelectedSubtitleLanguage {
                             if manuallySelectedSubtitleLanguage == "none" {
                                 // If user explicitly selected 'none', disable subtitles
