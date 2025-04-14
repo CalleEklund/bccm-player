@@ -21,7 +21,8 @@ class BccmPlayerViewController extends ChangeNotifier {
   bool _isDisposed = false;
   NavigatorState? _currentFullscreenNavigator;
   BccmPlayerViewController? _fullscreenViewController;
-  BccmPlayerViewController? get fullscreenViewController => _fullscreenViewController;
+  BccmPlayerViewController? get fullscreenViewController =>
+      _fullscreenViewController;
 
   BccmPlayerViewController({
     required this.playerController,
@@ -51,12 +52,16 @@ class BccmPlayerViewController extends ChangeNotifier {
   /// ```
   Future<void> enterFullscreen({BuildContext? context}) async {
     if (isFullscreen) {
-      debugPrint("bccm: Already in fullscreen, ignoring enterFullscreen() call.");
+      debugPrint(
+          "bccm: Already in fullscreen, ignoring enterFullscreen() call.");
       return;
     }
     WakelockPlus.enable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    SystemChrome.setPreferredOrientations(_getFullscreenOrientations());
+    final fullscreenOrientations = _getFullscreenOrientations();
+    if (fullscreenOrientations != null) {
+      SystemChrome.setPreferredOrientations(fullscreenOrientations);
+    }
 
     context ??= playerController.currentPlayerView?.context;
 
@@ -72,10 +77,14 @@ class BccmPlayerViewController extends ChangeNotifier {
 
     _fullscreenViewController = copyWith(playerController: playerController);
     _fullscreenViewController!._isFullscreen = true;
-    _fullscreenViewController!._currentFullscreenNavigator = _currentFullscreenNavigator;
-    _fullscreenViewController!._fullscreenViewController = _fullscreenViewController;
-    final builder = (config.fullscreenRouteBuilderFactory ?? defaultFullscreenBuilder);
-    await Navigator.of(context, rootNavigator: true).push(builder(_fullscreenViewController!));
+    _fullscreenViewController!._currentFullscreenNavigator =
+        _currentFullscreenNavigator;
+    _fullscreenViewController!._fullscreenViewController =
+        _fullscreenViewController;
+    final builder =
+        (config.fullscreenRouteBuilderFactory ?? defaultFullscreenBuilder);
+    await Navigator.of(context, rootNavigator: true)
+        .push(builder(_fullscreenViewController!));
     _fullscreenViewController?.dispose();
     _fullscreenViewController = null;
     _currentFullscreenNavigator = null;
@@ -90,23 +99,27 @@ class BccmPlayerViewController extends ChangeNotifier {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
 
-    SystemChrome.setPreferredOrientations(_getNormalOrientations());
+    final normalOrientations = _getNormalOrientations();
+    if (normalOrientations != null) {
+      SystemChrome.setPreferredOrientations(normalOrientations);
+    }
     WakelockPlus.disable();
   }
 
-  List<DeviceOrientation> _getFullscreenOrientations() {
+  List<DeviceOrientation>? _getFullscreenOrientations() {
     List<DeviceOrientation>? orientations;
     if (config.deviceOrientationsFullscreen != null) {
       orientations = config.deviceOrientationsFullscreen!(this);
     }
-    if (orientations != null) {
-      return orientations;
-    }
+    return orientations;
 
     final aspectRatio = playerController.value.videoSize?.aspectRatio;
     if (aspectRatio != null) {
       if (aspectRatio > 1) {
-        return [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight];
+        return [
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight
+        ];
       } else if (aspectRatio < 1) {
         return [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
       }
@@ -115,16 +128,12 @@ class BccmPlayerViewController extends ChangeNotifier {
     return DeviceOrientation.values;
   }
 
-  List<DeviceOrientation> _getNormalOrientations() {
+  List<DeviceOrientation>? _getNormalOrientations() {
     List<DeviceOrientation>? orientations;
     if (config.deviceOrientationsNormal != null) {
       orientations = config.deviceOrientationsNormal!(this);
     }
-    if (orientations != null) {
-      return orientations;
-    }
-
-    return DeviceOrientation.values.toList();
+    return orientations;
   }
 
   Future<void> exitFullscreen() async {
@@ -148,34 +157,40 @@ class BccmPlayerViewController extends ChangeNotifier {
     notifyListeners();
   }
 
-  FullscreenPageRouteBuilderFactory get defaultFullscreenBuilder => (BccmPlayerViewController viewController) => PageRouteBuilder(
-        pageBuilder: (context, aAnim, bAnim) => Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                color: Colors.black,
+  FullscreenPageRouteBuilderFactory get defaultFullscreenBuilder =>
+      (BccmPlayerViewController viewController) => PageRouteBuilder(
+            pageBuilder: (context, aAnim, bAnim) => Scaffold(
+              resizeToAvoidBottomInset: false,
+              body: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    color: Colors.black,
+                  ),
+                  SizedBox.expand(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: BccmPlayerView.withViewController(viewController),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox.expand(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: BccmPlayerView.withViewController(viewController),
-                ),
-              ),
-            ],
-          ),
-        ),
-        transitionsBuilder: (context, aAnim, bAnim, child) => FadeTransition(
-          opacity: aAnim,
-          child: child,
-        ),
-        fullscreenDialog: true,
-      );
+            ),
+            transitionsBuilder: (context, aAnim, bAnim, child) =>
+                FadeTransition(
+              opacity: aAnim,
+              child: child,
+            ),
+            fullscreenDialog: true,
+          );
 
   static BccmPlayerViewController of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<InheritedBccmPlayerViewController>()!.controller;
+    return context
+        .dependOnInheritedWidgetOfExactType<
+            InheritedBccmPlayerViewController>()!
+        .controller;
   }
 }
 
-typedef FullscreenPageRouteBuilderFactory = PageRouteBuilder Function(BccmPlayerViewController viewController);
+typedef FullscreenPageRouteBuilderFactory = PageRouteBuilder Function(
+    BccmPlayerViewController viewController);

@@ -8,9 +8,14 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.OptIn
 import androidx.media3.common.Player
+import androidx.media3.common.text.Cue
+import androidx.media3.common.text.CueGroup
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.util.DebugTextViewHelper
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
@@ -44,7 +49,7 @@ class FlutterExoPlayerView(
     private var setupDone = false
     override val isFullscreen = false
     override val shouldPipAutomatically
-        get() = pipOnLeave && (playerController?.player?.isPlaying ?: false) && (playerController?.player?.volume?.toDouble() ?: 0.0) > 0
+        get() = pipOnLeave && (playerController?.player?.isPlaying ?: false)
 
     class Factory(private val plugin: BccmPlayerPlugin?) :
         PlatformViewFactory(StandardMessageCodec.INSTANCE) {
@@ -87,7 +92,7 @@ class FlutterExoPlayerView(
         ioScope.cancel()
     }
 
-    private fun setup() {
+    @OptIn(UnstableApi::class) private fun setup() {
         if (_playerView?.player != null) {
             return
         }
@@ -101,7 +106,14 @@ class FlutterExoPlayerView(
             LayoutInflater.from(context).inflate(R.layout.surface_player_view, _v, true)
         } else {
             LayoutInflater.from(context).inflate(R.layout.player_view, _v, true)
+            // Initialize subtitle view after layout inflation
+            val subtitleView: SubtitleView? = _v.findViewById(R.id.custom_subtitle_view)
+
+            if (subtitleView != null) {
+                Log.d("MySubtitles", "Subtitle view is set up properly.")
+            }
         }
+
         playerController = playbackService.getController(playerId) as ExoPlayerController
 
         if (playerController == null) {
@@ -121,6 +133,8 @@ class FlutterExoPlayerView(
         }
 
         playerController!!.takeOwnership(playerView, this)
+
+        val exoPlayer = playerController!!.getExoPlayer()
 
         if (showControls == true) {
             setLiveUIEnabled(playerController?.isLive == true)

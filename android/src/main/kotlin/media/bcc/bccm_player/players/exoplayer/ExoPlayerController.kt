@@ -47,6 +47,8 @@ import java.util.UUID
 import media.bcc.bccm_player.utils.SystemGestureExcludedLinearLayout
 import media.bcc.bccm_player.R
 
+
+
 @UnstableApi
 class ExoPlayerController(
     private val context: Context,
@@ -56,13 +58,19 @@ class ExoPlayerController(
 
     override val id: String = UUID.randomUUID().toString()
     private val trackSelector: DefaultTrackSelector = DefaultTrackSelector(context)
+
     private val cacheDataSourceFactory = CacheDataSource.Factory()
         .setCache(Downloader.getCache(context))
         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
         .setCacheWriteDataSinkFactory(null)
+
     private val hlsFactory = HlsMediaSource.Factory(cacheDataSourceFactory)
         .setAllowChunklessPreparation(false)
+
+    /*private val mediaSourceFactory = DefaultMediaSourceFactory(context, hlsFactory)
+        .setDataSourceFactory(cacheDataSourceFactory)*/
     var currentSelectedLanguage: String = ""
+
     private val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
         .setAudioAttributes(AudioAttributes.DEFAULT, true)
@@ -71,25 +79,30 @@ class ExoPlayerController(
         .setLoadControl(getLoadControlForBufferMode(bufferMode))
         .build()
 
+
     init {
         exoPlayer.addListener(object : Player.Listener {
-            override fun onCues(cueGroup: CueGroup) {
-                val cues = cueGroup.cues
-                val subTitleCues = cues.mapNotNull { cue ->
-                    cue.text?.let {
-                        PlaybackPlatformApi.SubtitleCue.Builder()
-                            .setStartTimeMs(player.currentPosition.toLong())
-                            .setEndTimeMs(0)
-                            .setText(it.toString())
-                            .build()
-                    }
-                }
-                val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
-                    .setPlayerId(id)
-                    .setLanguage(currentSelectedLanguage)
-                    .setCues(subTitleCues)
-                    .build()
-                sendCues(subtitleEvent)
+           override fun onCues(cueGroup: CueGroup) {
+
+               val cues = cueGroup.cues
+               val subTitleCues = cues.mapNotNull { cue ->
+                   cue.text?.let {
+                       PlaybackPlatformApi.SubtitleCue.Builder()
+                           .setStartTimeMs(player.currentPosition.toLong())
+                           .setEndTimeMs(0)
+                           .setText(it.toString())
+                           .build()
+                   }
+               }
+
+               val subtitleEvent = PlaybackPlatformApi.SubtitleEvent.Builder()
+                   .setPlayerId(id)
+                   .setLanguage(currentSelectedLanguage)
+                   .setCues(subTitleCues)
+                   .build()
+
+               sendCues(subtitleEvent)
+
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -103,6 +116,7 @@ class ExoPlayerController(
     override val player: ForwardingPlayer
     override var currentPlayerViewController: BccmPlayerViewController? = null
     private var textLanguagesThatShouldBeSelected: Array<String>? = null
+
     private var _currentPlayerView: PlayerView? = null
     private var currentPlayerView: PlayerView?
         get() = _currentPlayerView
@@ -133,9 +147,12 @@ class ExoPlayerController(
     init {
         player = BccmForwardingPlayer(this)
         player.addListener(this)
+
         trackSelector.setParameters(
-            trackSelector.buildUponParameters().build()
+            trackSelector.buildUponParameters()
+                .build()
         )
+
         handleUpdatedAppConfig(BccmPlayerPluginSingleton.appConfigState.value)
         BccmPlayerPluginSingleton.npawConfigState.value?.let {
             handleUpdatedNpawConfig(it)
@@ -150,8 +167,11 @@ class ExoPlayerController(
 
     override fun onPlayerError(error: PlaybackException) {
         if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+            // Re-initialize player at the current live window default position.
             player.seekToDefaultPosition()
             player.prepare()
+        } else {
+            // Handle other errors.
         }
     }
 
@@ -164,11 +184,17 @@ class ExoPlayerController(
 
     private fun handleUpdatedAppConfig(appConfigState: PlaybackPlatformApi.AppConfig?) {
         Log.d("ExoPlayerController", "handleUpdatedAppConfig called with: $appConfigState")
+
+        Log.d(
+            "bccm",
+            "setting preferred audio and sub lang to: ${appConfigState?.audioLanguages}, ${appConfigState?.subtitleLanguages}"
+        )
         var audioLanguages = getExpectedAudioLanguages(appConfigState)
         val isPrimary = plugin?.getPlaybackService()?.getPrimaryController()?.id == id
+
         if (
-            player.trackSelectionParameters.preferredAudioLanguages != audioLanguages &&
-            isPrimary && appConfigState != null
+            player.trackSelectionParameters.preferredAudioLanguages != audioLanguages
+            && isPrimary && appConfigState != null
         ) {
             audioLanguages = appConfigState.audioLanguages
             manuallySelectedAudioLanguage = null
@@ -176,10 +202,14 @@ class ExoPlayerController(
                 .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
                 .build()
         }
+
         player.trackSelectionParameters = trackSelector.parameters.buildUpon()
             .setPreferredAudioLanguages(*(audioLanguages.toTypedArray()))
             .build()
+
         textLanguagesThatShouldBeSelected = appConfigState?.subtitleLanguages?.toTypedArray()
+        Log.d("ExoPlayerController", "Subtitle languages from appConfigState => ${appConfigState?.subtitleLanguages}")
+
         updateYouboraOptions()
     }
 
@@ -200,6 +230,7 @@ class ExoPlayerController(
             Log.d("bccm", "ExoPlayerController: Youbora is disabled")
             return
         }
+        Log.d("bccm", "ExoPlayerController: Initializing youbora")
         val options = Options().apply {
             isAutoDetectBackground = false
             userObfuscateIp = true
@@ -218,12 +249,14 @@ class ExoPlayerController(
 
     fun updateYouboraOptions() {
         val yPlugin = youboraPlugin ?: return
+        Log.d("bccm", "ExoPlayerController: Updating youbora options: ${player.mediaMetadata.title}")
+
         val mediaMetadata = player.mediaMetadata
         val extras = mediaMetadata.extras?.let { extractExtrasFromAndroid(it) }
         yPlugin.options.contentIsLive =
             extras?.get("npaw.content.isLive")?.toBooleanStrictOrNull()
                 ?: player.mediaMetadata.extras?.getString(PLAYER_DATA_IS_LIVE)?.toBooleanStrictOrNull()
-                ?: player.isCurrentMediaItemLive
+                        ?: player.isCurrentMediaItemLive
         yPlugin.options.contentId = extras?.get("npaw.content.id")
             ?: mediaMetadata.extras?.getString("id")
         yPlugin.options.contentTitle = extras?.get("npaw.content.title")
@@ -234,13 +267,15 @@ class ExoPlayerController(
         yPlugin.options.isOffline =
             extras?.get("npaw.isOffline")?.toBooleanStrictOrNull()
                 ?: player.mediaMetadata.extras?.getString(PLAYER_DATA_IS_OFFLINE)?.toBooleanStrictOrNull()
-                ?: false
+                        ?: false
         yPlugin.options.contentType = extras?.get("npaw.content.type")
+
         val appConfig = BccmPlayerPluginSingleton.appConfigState.value
         yPlugin.options.username = appConfig?.analyticsId
         yPlugin.options.contentCustomDimension1 = extras?.get("npaw.content.customDimension1")
-            ?: appConfig?.sessionId?.toString()
+            ?: if (appConfig?.sessionId != null) appConfig.sessionId.toString() else null
         yPlugin.options.contentCustomDimension2 = extras?.get("npaw.content.customDimension2")
+
         for (group in player.currentTracks.groups) {
             if (!group.isSelected) continue
             if (group.type == C.TRACK_TYPE_TEXT) {
@@ -259,6 +294,7 @@ class ExoPlayerController(
         val parametersBuilder = trackSelector.buildUponParameters()
         parametersBuilder.setForceLowestBitrate(force)
         trackSelector.setParameters(parametersBuilder)
+        Log.d("bccm", if (force) "Forcing lowest bitrate" else "No longer forcing lowest bitrate")
     }
 
     private fun getLowestBitrateTrackIndex(trackGroup: TrackGroup): Int {
@@ -308,16 +344,20 @@ class ExoPlayerController(
 
     override fun onTracksChanged(tracks: Tracks) {
         super.onTracksChanged(tracks)
-        for (group in tracks.groups) {
-            if (group.type == C.TRACK_TYPE_TEXT) {
-                for (i in 0 until group.length) {
-                    val format = group.mediaTrackGroup.getFormat(i)
-                    if (group.isSelected) {
-                        currentSelectedLanguage = format.language.toString()
+        // Log all text tracks discovered by ExoPlayer
+            for (group in tracks.groups) {
+                if (group.type == C.TRACK_TYPE_TEXT) {
+                    Log.d("MySubs", "Text track group found: ${group.mediaTrackGroup}, isSelected=${group.isSelected}")
+                    for (i in 0 until group.length) {
+                        val format = group.mediaTrackGroup.getFormat(i)
+                        if(group.isSelected){
+                            currentSelectedLanguage = format.language.toString()
+                        }
+                        Log.d("MySubs", "Track $i => lang=${format.language}, mime=${format.sampleMimeType}")
                     }
                 }
-            }
         }
+        Log.d("ExoPlayerController", "textLanguagesThatShouldBeSelected => ${textLanguagesThatShouldBeSelected?.joinToString()}")
         val textLanguages = textLanguagesThatShouldBeSelected
         if (!textLanguages.isNullOrEmpty() && tracks.groups.any { it.type == C.TRACK_TYPE_TEXT }) {
             if (setSelectedTrackByLanguages(C.TRACK_TYPE_TEXT, textLanguages, tracks)) {

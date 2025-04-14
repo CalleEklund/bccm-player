@@ -86,7 +86,7 @@ class ControlsWrapperState extends State<ControlsWrapper> with SingleTickerProvi
 
   void _startTimer() {
     _visibilityTimer?.cancel();
-    _visibilityTimer = Timer(const Duration(seconds: 5), () {
+    _visibilityTimer = Timer(const Duration(seconds: 3), () {
       if (!widget.autoHide || !mounted) {
         return;
       }

@@ -117,16 +117,15 @@ class AVPlayerBccmPlayerView: NSObject, FlutterPlatformView {
     func createNativeView() {
         if _playerController.pipController != nil && _playerController.fullscreenViewController == nil {
             print("starting with existing pipController")
-            playerViewController = _playerController.pipController
-            if let viewController = (UIApplication.shared.delegate?.window??.rootViewController)  {
-                viewController.addChild(playerViewController!)
-            }
+            let viewController = (UIApplication.shared.delegate?.window??.rootViewController)!
+            playerViewController = _playerController.pipController!
+            viewController.addChild(playerViewController!)
         } else {
             print("starting with new avplayerviewcontroller")
             playerViewController = LandscapeAVPlayerViewController()
-            if let viewController = (UIApplication.shared.delegate?.window??.rootViewController) {
-                viewController.addChild(playerViewController!)
-            }
+
+            let viewController = (UIApplication.shared.delegate?.window??.rootViewController)!
+            viewController.addChild(playerViewController!)
         }
 
         if let playerViewController = playerViewController {
@@ -134,7 +133,7 @@ class AVPlayerBccmPlayerView: NSObject, FlutterPlatformView {
             playerViewController.showsPlaybackControls = _showControls
             playerViewController.delegate = _playerController
             playerViewController.exitsFullScreenWhenPlaybackEnds = false
-            playerViewController.allowsPictureInPicturePlayback = _pipOnLeave
+            playerViewController.allowsPictureInPicturePlayback = true
             playerViewController.updatesNowPlayingInfoCenter = false
             playerViewController.view.backgroundColor = UIColor(white: 0, alpha: 0)
             if #available(iOS 16.0, *) {

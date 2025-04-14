@@ -17,15 +17,19 @@ import media.bcc.bccm_player.R
 
 internal class FlutterCastButton(
     context: Context,
-    color: Int?
+    color: Int?,
 ) :
     PlatformView {
     private val _view: View
 
     class Factory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-        override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
-            val params = args as? Map<*, *>?;
-            val color = (params?.get("color") as? Long?)?.toInt();
+        override fun create(
+            context: Context,
+            viewId: Int,
+            args: Any?,
+        ): PlatformView {
+            val params = args as? Map<*, *>?
+            val color = (params?.get("color") as? Long?)?.toInt()
             return FlutterCastButton(context, color)
         }
     }
@@ -43,12 +47,13 @@ internal class FlutterCastButton(
 
         val castTheme =
             ContextThemeWrapper(wrappedContext, androidx.mediarouter.R.style.Theme_MediaRouter)
-        val attrs = castTheme.obtainStyledAttributes(
-            null,
-            androidx.mediarouter.R.styleable.MediaRouteButton,
-            androidx.mediarouter.R.attr.mediaRouteButtonStyle,
-            0
-        )
+        val attrs =
+            castTheme.obtainStyledAttributes(
+                null,
+                androidx.mediarouter.R.styleable.MediaRouteButton,
+                androidx.mediarouter.R.attr.mediaRouteButtonStyle,
+                0,
+            )
         val drawable =
             attrs.getDrawable(androidx.mediarouter.R.styleable.MediaRouteButton_externalRouteEnabledDrawable)
         attrs.recycle()
@@ -56,7 +61,7 @@ internal class FlutterCastButton(
             DrawableCompat.setTint(drawable, targetColor)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 drawable.colorFilter = BlendModeColorFilter(targetColor, BlendMode.SRC_ATOP)
-            };
+            }
             drawable.state = btn.drawableState
             btn.setRemoteIndicatorDrawable(drawable)
         }

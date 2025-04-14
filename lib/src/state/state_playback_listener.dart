@@ -1,5 +1,5 @@
-import 'package:bccm_player/src/pigeon/playback_platform_pigeon.g.dart';
 import 'package:bccm_player/src/state/plugin_state_notifier.dart';
+import '../pigeon/playback_platform_pigeon.g.dart';
 import '../utils/extensions.dart';
 
 class StatePlaybackListener implements PlaybackListenerPigeon {
@@ -44,5 +44,10 @@ class StatePlaybackListener implements PlaybackListenerPigeon {
   @override
   void onPrimaryPlayerChanged(event) {
     pluginStateNotifier.setPrimaryPlayer(event.playerId);
+  }
+
+  @override
+  void onCues(SubtitleEvent event) {
+    pluginStateNotifier.getOrAddPlayerNotifier(event.playerId).setCues(event.cues);
   }
 }

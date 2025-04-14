@@ -20,9 +20,11 @@ import 'package:pigeon/pigeon.dart';
   objcOptions: ObjcOptions(),
 ))
 
+
 /// The main interface, used by the flutter side to control the player.
 @HostApi()
 abstract class PlaybackPlatformPigeon {
+
   @async
   void attach();
 
@@ -294,7 +296,7 @@ class SubtitleCue {
   late String text;
 }
 
-class SubtitleEvent implements PlayerEvent {
+class SubtitleEvent implements PlayerEvent{
   @override
   late String playerId;
   late String language;

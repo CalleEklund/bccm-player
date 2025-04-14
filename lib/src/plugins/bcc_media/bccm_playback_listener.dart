@@ -8,10 +8,9 @@ import '../../utils/extensions.dart';
 class BccmPlaybackListener {
   Ref ref;
   final progressDebouncer = Debouncer(milliseconds: 1000);
-  final void Function(String episodeId, int progressSeconds, int? durationSeconds) updateProgress;
-  final void Function(MediaItemTransitionEvent event)? onMediaItemTransition;
+  final void Function(String episodeId, int progressSeconds) updateProgress;
 
-  BccmPlaybackListener({required this.ref, required this.updateProgress, this.onMediaItemTransition}) {
+  BccmPlaybackListener({required this.ref, required this.updateProgress}) {
     final stream = BccmPlayerInterface.instance.playerEventStream;
     final listener = stream.listen((event) {
       switch (event.runtimeType) {
@@ -20,11 +19,6 @@ class BccmPlaybackListener {
           break;
         case PlayerStateUpdateEvent:
           onPlayerStateUpdate(event as PlayerStateUpdateEvent);
-          break;
-        case MediaItemTransitionEvent:
-          if (onMediaItemTransition != null) {
-            onMediaItemTransition!(event);
-          }
           break;
       }
     });
@@ -38,24 +32,20 @@ class BccmPlaybackListener {
     _updateProgress(
       episodeId: player?.currentMediaItem?.metadata?.extras?['id']?.asOrNull<String>(),
       positionMs: event.playbackPositionMs?.finiteOrNull()?.round(),
-      durationMs: player?.currentMediaItem?.metadata?.durationMs?.round(),
     );
   }
 
   void onPlayerStateUpdate(PlayerStateUpdateEvent event) {
     if (event.snapshot.playbackState != PlaybackState.playing) return;
-    var player = ref.read(playerProviderFor(event.playerId));
     _updateProgress(
       episodeId: event.snapshot.currentMediaItem?.metadata?.extras?['id']?.asOrNull<String>(),
       positionMs: event.snapshot.playbackPositionMs?.finiteOrNull()?.round(),
-      durationMs: player?.currentMediaItem?.metadata?.durationMs?.round(),
     );
   }
 
-  void _updateProgress({required String? episodeId, required int? positionMs, int? durationMs}) {
+  void _updateProgress({required String? episodeId, required int? positionMs}) {
     if (episodeId == null || positionMs == null) return;
     final progressSeconds = positionMs / 1000;
-    final durationSeconds = durationMs != null ? durationMs / 1000 : null;
-    progressDebouncer.run(() => updateProgress(episodeId, progressSeconds.round(), durationSeconds?.round()));
+    progressDebouncer.run(() => updateProgress(episodeId, progressSeconds.round()));
   }
 }

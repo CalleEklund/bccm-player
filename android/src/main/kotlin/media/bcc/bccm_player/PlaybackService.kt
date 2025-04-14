@@ -8,6 +8,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastState
+import media.bcc.bccm_player.pigeon.PlaybackPlatformApi
 import media.bcc.bccm_player.pigeon.PlaybackPlatformApi.BufferMode
 import media.bcc.bccm_player.pigeon.PlaybackPlatformApi.PlayerStateUpdateEvent
 import media.bcc.bccm_player.pigeon.PlaybackPlatformApi.PrimaryPlayerChangedEvent
@@ -21,7 +22,7 @@ class PlaybackService : MediaSessionService() {
     private val playerControllers = mutableListOf<PlayerController>()
     private var castPlayerController: CastPlayerController? = null
     private var primaryPlayerController: PlayerController? = null
-    private var mediaSession: MediaSession? = null
+    private lateinit var mediaSession: MediaSession
     private var binder: LocalBinder = LocalBinder()
     private var previousPrimaryPlayerId: String? = null
 
@@ -80,10 +81,7 @@ class PlaybackService : MediaSessionService() {
         playerControllers.clear()
         primaryPlayerController = null
         this.plugin = null
-        mediaSession?.run {
-            release()
-        }
-        mediaSession = null
+        mediaSession.release()
         stopSelf()
     }
 
@@ -124,9 +122,7 @@ class PlaybackService : MediaSessionService() {
         if (pc?.player != null) {
             previousPrimaryPlayerId = primaryPlayerController?.id
             primaryPlayerController = pc
-            mediaSession?.run {
-                player = pc.player
-            }
+            mediaSession.player = pc.player
             if (plugin != null) {
                 plugin!!.playbackPigeon?.onPrimaryPlayerChanged(
                     PrimaryPlayerChangedEvent.Builder().setPlayerId(playerId).build(), NoOpVoidResult()
@@ -179,7 +175,7 @@ class PlaybackService : MediaSessionService() {
 
     // Return a MediaSession to link with the MediaController that is making
     // this request.
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession =
         mediaSession
 
     override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
@@ -192,10 +188,7 @@ class PlaybackService : MediaSessionService() {
             it.release()
         }
         playerControllers.clear()
-        mediaSession?.run {
-            release()
-        }
-        mediaSession = null
+        mediaSession.release()
         super.onDestroy()
     }
 

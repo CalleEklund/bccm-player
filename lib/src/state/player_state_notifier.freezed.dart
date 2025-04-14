@@ -28,11 +28,10 @@ mixin _$PlayerState {
   bool get isInitialized => throw _privateConstructorUsedError;
   int? get textureId => throw _privateConstructorUsedError;
   double? get volume => throw _privateConstructorUsedError;
+  List<SubtitleCue?> get cues => throw _privateConstructorUsedError;
   PlayerError? get error => throw _privateConstructorUsedError;
 
-  /// Create a copy of PlayerState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $PlayerStateCopyWith<PlayerState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -56,6 +55,7 @@ abstract class $PlayerStateCopyWith<$Res> {
       bool isInitialized,
       int? textureId,
       double? volume,
+      List<SubtitleCue?> cues,
       PlayerError? error});
 }
 
@@ -69,8 +69,6 @@ class _$PlayerStateCopyWithImpl<$Res, $Val extends PlayerState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of PlayerState
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -86,6 +84,7 @@ class _$PlayerStateCopyWithImpl<$Res, $Val extends PlayerState>
     Object? isInitialized = null,
     Object? textureId = freezed,
     Object? volume = freezed,
+    Object? cues = null,
     Object? error = freezed,
   }) {
     return _then(_value.copyWith(
@@ -137,6 +136,10 @@ class _$PlayerStateCopyWithImpl<$Res, $Val extends PlayerState>
           ? _value.volume
           : volume // ignore: cast_nullable_to_non_nullable
               as double?,
+      cues: null == cues
+          ? _value.cues
+          : cues // ignore: cast_nullable_to_non_nullable
+              as List<SubtitleCue?>,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -166,6 +169,7 @@ abstract class _$$PlayerStateImplCopyWith<$Res>
       bool isInitialized,
       int? textureId,
       double? volume,
+      List<SubtitleCue?> cues,
       PlayerError? error});
 }
 
@@ -177,8 +181,6 @@ class __$$PlayerStateImplCopyWithImpl<$Res>
       _$PlayerStateImpl _value, $Res Function(_$PlayerStateImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of PlayerState
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -194,6 +196,7 @@ class __$$PlayerStateImplCopyWithImpl<$Res>
     Object? isInitialized = null,
     Object? textureId = freezed,
     Object? volume = freezed,
+    Object? cues = null,
     Object? error = freezed,
   }) {
     return _then(_$PlayerStateImpl(
@@ -245,6 +248,10 @@ class __$$PlayerStateImplCopyWithImpl<$Res>
           ? _value.volume
           : volume // ignore: cast_nullable_to_non_nullable
               as double?,
+      cues: null == cues
+          ? _value.cues
+          : cues // ignore: cast_nullable_to_non_nullable
+              as List<SubtitleCue?>,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -269,6 +276,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       this.isInitialized = false,
       this.textureId,
       this.volume,
+      this.cues = const [],
       this.error})
       : super._();
 
@@ -303,11 +311,13 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
   @override
   final double? volume;
   @override
+  final List<SubtitleCue?> cues;
+  @override
   final PlayerError? error;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'PlayerState(playerId: $playerId, currentMediaItem: $currentMediaItem, videoSize: $videoSize, playbackPositionMs: $playbackPositionMs, playbackSpeed: $playbackSpeed, isNativeFullscreen: $isNativeFullscreen, playbackState: $playbackState, isBuffering: $isBuffering, isInPipMode: $isInPipMode, isInitialized: $isInitialized, textureId: $textureId, volume: $volume, error: $error)';
+    return 'PlayerState(playerId: $playerId, currentMediaItem: $currentMediaItem, videoSize: $videoSize, playbackPositionMs: $playbackPositionMs, playbackSpeed: $playbackSpeed, isNativeFullscreen: $isNativeFullscreen, playbackState: $playbackState, isBuffering: $isBuffering, isInPipMode: $isInPipMode, isInitialized: $isInitialized, textureId: $textureId, volume: $volume, cues: $cues, error: $error)';
   }
 
   @override
@@ -327,6 +337,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       ..add(DiagnosticsProperty('isInitialized', isInitialized))
       ..add(DiagnosticsProperty('textureId', textureId))
       ..add(DiagnosticsProperty('volume', volume))
+      ..add(DiagnosticsProperty('cues', cues))
       ..add(DiagnosticsProperty('error', error));
   }
 
@@ -358,6 +369,7 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
             (identical(other.textureId, textureId) ||
                 other.textureId == textureId) &&
             (identical(other.volume, volume) || other.volume == volume) &&
+            const DeepCollectionEquality().equals(other.cues, cues) &&
             (identical(other.error, error) || other.error == error));
   }
 
@@ -376,11 +388,10 @@ class _$PlayerStateImpl extends _PlayerState with DiagnosticableTreeMixin {
       isInitialized,
       textureId,
       volume,
+      cues,
       error);
 
-  /// Create a copy of PlayerState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$PlayerStateImplCopyWith<_$PlayerStateImpl> get copyWith =>
@@ -401,6 +412,7 @@ abstract class _PlayerState extends PlayerState {
       final bool isInitialized,
       final int? textureId,
       final double? volume,
+      final List<SubtitleCue?> cues,
       final PlayerError? error}) = _$PlayerStateImpl;
   const _PlayerState._() : super._();
 
@@ -429,12 +441,11 @@ abstract class _PlayerState extends PlayerState {
   @override
   double? get volume;
   @override
-  PlayerError? get error;
-
-  /// Create a copy of PlayerState
-  /// with the given fields replaced by the non-null parameter values.
+  List<SubtitleCue?> get cues;
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  PlayerError? get error;
+  @override
+  @JsonKey(ignore: true)
   _$$PlayerStateImplCopyWith<_$PlayerStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -63,7 +63,7 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         self.disableNpaw = disableNpaw ?? false
         super.init()
         updateAutomaticAudioOnlyTimer()
-        player.actionAtItemEnd = .pause
+        player.actionAtItemEnd = .none
         if bufferMode == .fastStartShortForm {
             player.automaticallyWaitsToMinimizeStalling = false
         }
@@ -463,10 +463,8 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         youboraPlugin.options.contentEpisodeTitle = extras?["npaw.content.episodeTitle"] as? String
         youboraPlugin.options.offline = extras?["npaw.isOffline"] as? String == "true" || (mediaItem.isOffline?.boolValue) == true
         youboraPlugin.options.contentType = extras?["npaw.content.type"] as? String
-        youboraPlugin.options.contentLanguage = extras?["npaw.content.language"] as? String
         youboraPlugin.options.contentCustomDimension1 = (extras?["npaw.content.customDimension1"] as? String?) ?? appConfig?.sessionId != nil ? appConfig?.sessionId?.stringValue : nil
         youboraPlugin.options.contentCustomDimension2 = extras?["npaw.content.customDimension2"] as? String
-        youboraPlugin.options.contentTransactionCode = extras?["npaw.content.transactionCode"] as? String
     }
 
     public func setNpawConfig(npawConfig: NpawConfig?) {
@@ -536,10 +534,6 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                         // This is the initial signal. If this is not set the language is generally empty in NPAW
                         self.youboraPlugin?.options.contentSubtitles = self.player.currentItem?.getSelectedSubtitleLanguage()
                         self.youboraPlugin?.options.contentLanguage = self.player.currentItem?.getSelectedAudioLanguage()
-                        if let metadata = mediaItem.metadata, let extras = metadata.safeExtras(), let transactionCode = extras["npaw.content.transactionCode"] {
-                            let _transactionCode = String(describing: transactionCode)
-                            self.youboraPlugin?.options.contentTransactionCode = _transactionCode
-                        }
                         completion?(nil)
                     } else if playerItem.status == .failed || playerItem.status == .unknown {
                         print("Mediaitem failed to play")

@@ -94,6 +94,10 @@ class PlayerStateNotifier extends StateNotifier<PlayerState> {
   void setStateFromSnapshot(PlayerStateSnapshot snapshot) {
     state = state.copyWithSnapshot(snapshot);
   }
+
+  void setCues(List<SubtitleCue?> cues) {
+    state = state.copyWith(cues: cues);
+  }
 }
 
 @freezed
@@ -112,6 +116,7 @@ class PlayerState with _$PlayerState {
     @Default(false) bool isInitialized,
     int? textureId,
     double? volume,
+    List<SubtitleCue?> cues,
     PlayerError? error,
   }) = _PlayerState;
 

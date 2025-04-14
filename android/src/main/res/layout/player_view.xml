@@ -62,4 +62,15 @@
         tools:layout_conversion_absoluteWidth="0dp"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp" />
+
+        <androidx.media3.ui.SubtitleView
+        android:id="@+id/custom_subtitle_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:layout_gravity="bottom"
+        android:padding="8dp"
+        android:textColor="#FFFFFF"
+        android:visibility="visible"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>
