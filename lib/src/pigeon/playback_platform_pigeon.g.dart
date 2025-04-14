@@ -563,6 +563,68 @@ class Track {
   }
 }
 
+class SubtitleCue {
+  SubtitleCue({
+    required this.startTimeMs,
+    required this.endTimeMs,
+    required this.text,
+  });
+
+  int startTimeMs;
+
+  int endTimeMs;
+
+  String text;
+
+  Object encode() {
+    return <Object?>[
+      startTimeMs,
+      endTimeMs,
+      text,
+    ];
+  }
+
+  static SubtitleCue decode(Object result) {
+    result as List<Object?>;
+    return SubtitleCue(
+      startTimeMs: result[0]! as int,
+      endTimeMs: result[1]! as int,
+      text: result[2]! as String,
+    );
+  }
+}
+
+class SubtitleEvent {
+  SubtitleEvent({
+    required this.playerId,
+    required this.language,
+    required this.cues,
+  });
+
+  String playerId;
+
+  String language;
+
+  List<SubtitleCue?> cues;
+
+  Object encode() {
+    return <Object?>[
+      playerId,
+      language,
+      cues,
+    ];
+  }
+
+  static SubtitleEvent decode(Object result) {
+    result as List<Object?>;
+    return SubtitleEvent(
+      playerId: result[0]! as String,
+      language: result[1]! as String,
+      cues: (result[2] as List<Object?>?)!.cast<SubtitleCue?>(),
+    );
+  }
+}
+
 class PrimaryPlayerChangedEvent {
   PrimaryPlayerChangedEvent({
     this.playerId,
@@ -807,26 +869,32 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is Track) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    }    else if (value is PrimaryPlayerChangedEvent) {
+    }    else if (value is SubtitleCue) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    }    else if (value is PlayerStateUpdateEvent) {
+    }    else if (value is SubtitleEvent) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    }    else if (value is PositionDiscontinuityEvent) {
+    }    else if (value is PrimaryPlayerChangedEvent) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    }    else if (value is PlaybackStateChangedEvent) {
+    }    else if (value is PlayerStateUpdateEvent) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    }    else if (value is PlaybackEndedEvent) {
+    }    else if (value is PositionDiscontinuityEvent) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    }    else if (value is PictureInPictureModeChangedEvent) {
+    }    else if (value is PlaybackStateChangedEvent) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    }    else if (value is MediaItemTransitionEvent) {
+    }    else if (value is PlaybackEndedEvent) {
       buffer.putUint8(153);
+      writeValue(buffer, value.encode());
+    }    else if (value is PictureInPictureModeChangedEvent) {
+      buffer.putUint8(154);
+      writeValue(buffer, value.encode());
+    }    else if (value is MediaItemTransitionEvent) {
+      buffer.putUint8(155);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -878,18 +946,22 @@ class _PigeonCodec extends StandardMessageCodec {
       case 146: 
         return Track.decode(readValue(buffer)!);
       case 147: 
-        return PrimaryPlayerChangedEvent.decode(readValue(buffer)!);
+        return SubtitleCue.decode(readValue(buffer)!);
       case 148: 
-        return PlayerStateUpdateEvent.decode(readValue(buffer)!);
+        return SubtitleEvent.decode(readValue(buffer)!);
       case 149: 
-        return PositionDiscontinuityEvent.decode(readValue(buffer)!);
+        return PrimaryPlayerChangedEvent.decode(readValue(buffer)!);
       case 150: 
-        return PlaybackStateChangedEvent.decode(readValue(buffer)!);
+        return PlayerStateUpdateEvent.decode(readValue(buffer)!);
       case 151: 
-        return PlaybackEndedEvent.decode(readValue(buffer)!);
+        return PositionDiscontinuityEvent.decode(readValue(buffer)!);
       case 152: 
-        return PictureInPictureModeChangedEvent.decode(readValue(buffer)!);
+        return PlaybackStateChangedEvent.decode(readValue(buffer)!);
       case 153: 
+        return PlaybackEndedEvent.decode(readValue(buffer)!);
+      case 154: 
+        return PictureInPictureModeChangedEvent.decode(readValue(buffer)!);
+      case 155: 
         return MediaItemTransitionEvent.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1693,6 +1765,8 @@ abstract class PlaybackListenerPigeon {
 
   void onPictureInPictureModeChanged(PictureInPictureModeChangedEvent event);
 
+  void onCues(SubtitleEvent event);
+
   static void setUp(PlaybackListenerPigeon? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
@@ -1861,6 +1935,31 @@ abstract class PlaybackListenerPigeon {
               'Argument for dev.flutter.pigeon.bccm_player.PlaybackListenerPigeon.onPictureInPictureModeChanged was null, expected non-null PictureInPictureModeChangedEvent.');
           try {
             api.onPictureInPictureModeChanged(arg_event!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.bccm_player.PlaybackListenerPigeon.onCues$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.bccm_player.PlaybackListenerPigeon.onCues was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final SubtitleEvent? arg_event = (args[0] as SubtitleEvent?);
+          assert(arg_event != null,
+              'Argument for dev.flutter.pigeon.bccm_player.PlaybackListenerPigeon.onCues was null, expected non-null SubtitleEvent.');
+          try {
+            api.onCues(arg_event!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
