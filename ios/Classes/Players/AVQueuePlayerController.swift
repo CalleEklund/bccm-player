@@ -6,6 +6,11 @@ import MediaPlayer
 import YouboraAVPlayerAdapter
 import YouboraLib
 
+fileprivate enum UserDefaultsKeys {
+    static let audioLanguagePreference = "com.bccm.player.audioLanguagePreference"
+    static let subtitleLanguagePreference = "com.bccm.player.subtitleLanguagePreference"
+}
+
 public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewControllerDelegate {
     lazy var player: AVQueuePlayer = .init()
     public final let id: String
@@ -28,7 +33,25 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
     var repeatMode = RepeatMode.off
     let bufferMode: BufferMode
     let disableNpaw: Bool
-
+    public var manuallySelectedAudioLanguage: String? {
+        didSet {
+            if let language = manuallySelectedAudioLanguage {
+                UserDefaults.standard.set(language, forKey: UserDefaultsKeys.audioLanguagePreference)
+            } else {
+                UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.audioLanguagePreference)
+            }
+        }
+    }
+    public var manuallySelectedSubtitleLanguage: String? {
+        didSet {
+            if let language = manuallySelectedSubtitleLanguage {
+                UserDefaults.standard.set(language, forKey: UserDefaultsKeys.subtitleLanguagePreference)
+            } else {
+                UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.subtitleLanguagePreference)
+            }
+        }
+    }
+    
     var audioOnlyTimer: Timer?
     var currentViewController: AVPlayerViewController? {
         didSet {
@@ -36,9 +59,7 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         }
     }
     
-    public var manuallySelectedAudioLanguage: String?
-    
-    private func updateAutomaticAudioOnlyTimer() {
+    public func updateAutomaticAudioOnlyTimer() {
         if bufferMode == BufferMode.fastStartShortForm {
             // no-op, we dont want automatic audio-only for shortform content
             return
@@ -76,6 +97,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
             initYoubora(npawConfig)
         }
         print("BTV DEBUG: end of init playerController")
+        
+        manuallySelectedAudioLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.audioLanguagePreference)
+        manuallySelectedSubtitleLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.subtitleLanguagePreference)
     }
     
     deinit {
@@ -200,6 +224,11 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         }
         guard let trackId = trackId else {
             currentItem.select(nil, in: selectionGroup)
+            if mediaCharacteristic == .legible {
+                manuallySelectedSubtitleLanguage = "none"
+            } else if mediaCharacteristic == .audible {
+                manuallySelectedAudioLanguage = "none"
+            }
             return
         }
         guard let trackIdInt = Int(trackId) else {
@@ -218,6 +247,8 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                 currentItem.select(optionToSelect, in: selectionGroup)
                 if type == .audio {
                     manuallySelectedAudioLanguage = optionToSelect.locale?.identifier
+                } else if type == .text {
+                    manuallySelectedSubtitleLanguage = optionToSelect.locale?.identifier
                 }
             }
         } else {
@@ -328,9 +359,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
         coordinator.animate(alongsideTransition: { _ in }, completion: {
             _ in
             UIView.setAnimationsEnabled(true)
+            self.fullscreenViewController = playerViewController
+            self.onManualPlayerStateUpdate()
         })
-        fullscreenViewController = playerViewController
-        onManualPlayerStateUpdate()
     }
     
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
@@ -518,6 +549,9 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                             self.play()
                         }
                         var audioLanguages: [String] = []
+                        if self.manuallySelectedAudioLanguage == nil {
+                            self.manuallySelectedAudioLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.audioLanguagePreference)
+                        }
                         if let manuallySelectedAudioLanguage = self.manuallySelectedAudioLanguage {
                             audioLanguages.append(manuallySelectedAudioLanguage)
                         }
@@ -527,7 +561,25 @@ public class AVQueuePlayerController: NSObject, PlayerController, AVPlayerViewCo
                         if !audioLanguages.isEmpty {
                             _ = playerItem.setAudioLanguagePrioritized(audioLanguages)
                         }
-                        if let subtitleLanguages = self.appConfig?.subtitleLanguages {
+                        
+                        var subtitleLanguages: [String] = []
+                        if self.manuallySelectedSubtitleLanguage == nil {
+                            self.manuallySelectedSubtitleLanguage = UserDefaults.standard.string(forKey: UserDefaultsKeys.subtitleLanguagePreference)
+                        }
+                        if let manuallySelectedSubtitleLanguage = self.manuallySelectedSubtitleLanguage {
+                            if manuallySelectedSubtitleLanguage == "none" {
+                                // If user explicitly selected 'none', disable subtitles
+                                if let subtitleGroup = playerItem.asset.mediaSelectionGroup(forMediaCharacteristic: .legible) {
+                                    playerItem.select(nil, in: subtitleGroup)
+                                }
+                            } else {
+                                subtitleLanguages.append(manuallySelectedSubtitleLanguage)
+                            }
+                        }
+                        if let configSubtitleLanguages = self.appConfig?.subtitleLanguages {
+                            subtitleLanguages.append(contentsOf: configSubtitleLanguages)
+                        }
+                        if !subtitleLanguages.isEmpty && self.manuallySelectedSubtitleLanguage != "none" {
                             _ = playerItem.setSubtitleLanguagePrioritized(subtitleLanguages)
                         }
                         
